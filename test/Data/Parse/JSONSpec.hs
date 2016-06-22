@@ -32,6 +32,20 @@ spec = do
     it "doesn't parse a non-boolean value" $ do
       parse boolJSON "" "non-bool" `shouldSatisfy` isLeft
 
+  describe "stringJSON" $ do
+    it "parses a normal string" $ do
+      parse stringJSON "" "\"string\"" `shouldBe` Right (JSONString "string")
+    it "doesn't parse a non-string value" $ do
+      parse stringJSON "" "non-string" `shouldSatisfy` isLeft
+
+  describe "valueJSON" $ do
+    it "parses a boolean value" $ do
+      parse valueJSON "" "true" `shouldBe` Right (JSONBool True)
+    it "parses a string" $ do
+      parse valueJSON "" "\"string\"" `shouldBe` Right (JSONString "string")
+    it "doesn't parse a non-JSON value" $ do
+      parse valueJSON "" "{{]]f343}[[;" `shouldSatisfy` isLeft
+
 -- | Tells if the given Either is a Left.
 isLeft :: Either a b -> Bool
 isLeft e = case e of

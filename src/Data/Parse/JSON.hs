@@ -9,8 +9,8 @@
 
 module Data.Parse.JSON where
 
-import Text.Parsec.Char (string)
-import Text.ParserCombinators.Parsec ((<|>), Parser, parse)
+import Control.Applicative ((<$>), (<|>), (*>), (<*), many)
+import Text.ParserCombinators.Parsec (char, noneOf, parse, Parser, string)
 
 -- | Represents a JSON value.
 data JSONValue =
@@ -44,3 +44,20 @@ boolFalse = fmap (const False) $ string "false"
 -- Right (JSONBool False)
 boolJSON :: Parser JSONValue
 boolJSON = fmap (JSONBool) $ boolTrue <|> boolFalse
+
+-- | Parses a JSON string value.
+--
+-- >>> parse stringJSON "" "\"string\""
+-- Right (JSONString "string")
+stringJSON :: Parser JSONValue
+stringJSON = JSONString <$> (char '\"' *> (many $ noneOf "\"") <* char '\"')
+
+-- | Parses a JSON value.
+--
+-- >>> parse boolJSON "" "true"
+-- Right (JSONBool True)
+--
+-- >>> parse stringJSON "" "\"string\""
+-- Right (JSONString "string")
+valueJSON :: Parser JSONValue
+valueJSON = boolJSON <|> stringJSON

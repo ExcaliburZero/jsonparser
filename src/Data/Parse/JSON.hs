@@ -10,7 +10,7 @@
 module Data.Parse.JSON where
 
 import Text.Parsec.Char (string)
-import Text.ParserCombinators.Parsec ((<|>), Parser)
+import Text.ParserCombinators.Parsec ((<|>), Parser, parse)
 
 -- | Represents a JSON value.
 data JSONValue =

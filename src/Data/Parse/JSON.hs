@@ -52,12 +52,22 @@ boolJSON = fmap (JSONBool) $ boolTrue <|> boolFalse
 stringJSON :: Parser JSONValue
 stringJSON = JSONString <$> (char '\"' *> (many $ noneOf "\"") <* char '\"')
 
+-- | Parses a JSON null value.
+--
+-- >>> parse nullJSON "" "null"
+-- Right JSONNull
+nullJSON :: Parser JSONValue
+nullJSON = (const JSONNull) <$> string "null"
+
 -- | Parses a JSON value.
 --
--- >>> parse boolJSON "" "true"
+-- >>> parse valueJSON "" "true"
 -- Right (JSONBool True)
 --
--- >>> parse stringJSON "" "\"string\""
+-- >>> parse valueJSON "" "\"string\""
 -- Right (JSONString "string")
+--
+-- >>> parse valueJSON "" "null"
+-- Right JSONNull
 valueJSON :: Parser JSONValue
-valueJSON = boolJSON <|> stringJSON
+valueJSON = boolJSON <|> stringJSON <|> nullJSON

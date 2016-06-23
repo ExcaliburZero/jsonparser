@@ -38,11 +38,19 @@ spec = do
     it "doesn't parse a non-string value" $ do
       parse stringJSON "" "non-string" `shouldSatisfy` isLeft
 
+  describe "nullJSON" $ do
+    it "parses a null value" $ do
+      parse nullJSON "" "null" `shouldBe` Right JSONNull
+    it "doesn't parse a non-null value" $ do
+      parse nullJSON "" "non-null" `shouldSatisfy` isLeft
+
   describe "valueJSON" $ do
     it "parses a boolean value" $ do
       parse valueJSON "" "true" `shouldBe` Right (JSONBool True)
     it "parses a string" $ do
       parse valueJSON "" "\"string\"" `shouldBe` Right (JSONString "string")
+    it "parses a null value" $ do
+      parse valueJSON "" "null" `shouldBe` Right JSONNull
     it "doesn't parse a non-JSON value" $ do
       parse valueJSON "" "{{]]f343}[[;" `shouldSatisfy` isLeft
 

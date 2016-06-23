@@ -9,17 +9,18 @@
 
 module Data.Parse.JSON where
 
-import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), many)
-import Text.ParserCombinators.Parsec (char, digit, noneOf, oneOf, parse, Parser, string)
+import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), empty, many)
+import Text.ParserCombinators.Parsec.Token ()
+import Text.ParserCombinators.Parsec (char, digit, noneOf, oneOf, parse, Parser, spaces, string)
 
 -- | Represents a JSON value.
 data JSONValue =
     JSONBool Bool                     -- ^ A boolean value
   | JSONNum Float                     -- ^ A number
   | JSONString String                 -- ^ A string
-  | JSONObject [(String, JSONValue)]  -- ^ A list of key value pairs
-  | JSONArray [JSONValue]             -- ^ An array of JSON values
   | JSONNull                          -- ^ A null value
+  | JSONArray [JSONValue]             -- ^ An array of JSON values
+  | JSONObject [(String, JSONValue)]  -- ^ A list of key value pairs
   deriving (Eq, Show)
 
 -- | Parses a "true" string into a True value.
@@ -81,6 +82,23 @@ stringJSON = JSONString <$> (char '\"' *> (many $ noneOf "\"") <* char '\"')
 nullJSON :: Parser JSONValue
 nullJSON = (const JSONNull) <$> string "null"
 
+-- | Parses an array of JSON values.
+--
+-- >>> parse arrayJSON "" "[1, 2]"
+-- Right (JSONArray [JSONNum 1.0,JSONNum 2.0])
+--
+-- >>> parse arrayJSON "" "[true, null]"
+-- Right (JSONArray [JSONBool True,JSONNull])
+--
+-- >>> parse arrayJSON "" "[]"
+-- Right (JSONArray [])
+arrayJSON :: Parser JSONValue
+arrayJSON = JSONArray <$> (char '[' *> spaces *> valuesAndEnding)
+  where valuesAndEnding = withValues <|> withoutValues
+        withValues    = values <* char ']'
+        withoutValues = (const []) <$> char ']'
+        values = (:) <$> valueJSON <*> (many $ (char ',' *> spaces *> valueJSON))
+
 -- | Parses a JSON value.
 --
 -- >>> parse valueJSON "" "true"
@@ -92,4 +110,4 @@ nullJSON = (const JSONNull) <$> string "null"
 -- >>> parse valueJSON "" "null"
 -- Right JSONNull
 valueJSON :: Parser JSONValue
-valueJSON = boolJSON <|> numJSON <|> stringJSON <|> nullJSON
+valueJSON = boolJSON <|> numJSON <|> stringJSON <|> nullJSON <|> arrayJSON

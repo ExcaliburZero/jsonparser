@@ -72,6 +72,32 @@ spec = do
     it "doesn't parse a non-null value" $ do
       parse nullJSON "" "non-null" `shouldSatisfy` isLeft
 
+  describe "arrayJSON" $ do
+    it "parses a one element list" $ do
+      parse arrayJSON "" "[1]" `shouldBe` Right (JSONArray [JSONNum 1.0])
+    it "parses a multi-element list" $ do
+      parse arrayJSON "" "[1,2]" `shouldBe` Right (JSONArray [JSONNum 1.0, JSONNum 2.0])
+    it "parses an empty list" $ do
+      parse arrayJSON "" "[]" `shouldBe` Right (JSONArray [])
+    it "parses a list of different elements" $ do
+      parse arrayJSON "" "[1,true,\"string\"]" `shouldBe` Right (JSONArray [JSONNum 1.0, JSONBool True, JSONString "string"])
+    it "parses a list containing a list" $ do
+      parse arrayJSON "" "[[1],2]" `shouldBe` Right (JSONArray [JSONArray [JSONNum 1.0], JSONNum 2.0])
+    it "parses a list with separating spaces" $ do
+      parse arrayJSON "" "[1, 2]" `shouldBe` Right (JSONArray [JSONNum 1.0, JSONNum 2.0])
+    it "parses a list with spaces before first element" $ do
+      parse arrayJSON "" "[ 1]" `shouldBe` Right (JSONArray [JSONNum 1.0])
+    it "parses an empty list with spaces" $ do
+      parse arrayJSON "" "[   ]" `shouldBe` Right (JSONArray [])
+    it "doesn't parse a non-comma seperated list" $ do
+      parse arrayJSON "" "[1true]" `shouldSatisfy` isLeft
+    it "doesn't parse a list without brackets" $ do
+      parse arrayJSON "" "true,false" `shouldSatisfy` isLeft
+    it "doesn't parse a list with unmatched brackets" $ do
+      parse arrayJSON "" "[true,fale" `shouldSatisfy` isLeft
+    it "doesn't parse a list with an empty first value" $ do
+      parse arrayJSON "" "[,true]" `shouldSatisfy` isLeft
+
   describe "valueJSON" $ do
     it "parses a boolean value" $ do
       parse valueJSON "" "true" `shouldBe` Right (JSONBool True)
@@ -81,6 +107,8 @@ spec = do
       parse valueJSON "" "\"string\"" `shouldBe` Right (JSONString "string")
     it "parses a null value" $ do
       parse valueJSON "" "null" `shouldBe` Right JSONNull
+    it "parses an array" $ do
+      parse valueJSON "" "[1,2]" `shouldBe` Right (JSONArray [JSONNum 1.0, JSONNum 2.0])
     it "doesn't parse a non-JSON value" $ do
       parse valueJSON "" "{{]]f343}[[;" `shouldSatisfy` isLeft
 

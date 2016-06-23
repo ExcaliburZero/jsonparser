@@ -32,6 +32,34 @@ spec = do
     it "doesn't parse a non-boolean value" $ do
       parse boolJSON "" "non-bool" `shouldSatisfy` isLeft
 
+  describe "numString" $ do
+    it "parses a positive integer" $ do
+      parse numString "" "12345" `shouldBe` Right "12345"
+    it "parses a negative integer" $ do
+      parse numString "" "-1234" `shouldBe` Right "-1234"
+    it "parses a decimal value" $ do
+      parse numString "" "89.123" `shouldBe` Right "89.123"
+    it "parses a number in scientific notation" $ do
+      parse numString "" "1.234e14" `shouldBe` Right "1.234e14"
+    it "parses a number in scientific notation with capital E" $ do
+      parse numString "" "1.23E4" `shouldBe` Right "1.23E4"
+    it "doesn't parse a non-number value" $ do
+      parse numString "" "true" `shouldSatisfy` isLeft
+
+  describe "numJSON" $ do
+    it "parses a positive integer" $ do
+      parse numJSON "" "12345" `shouldBe` Right (JSONNum 12345.0)
+    it "parses a negaive integer" $ do
+      parse numJSON "" "-1234" `shouldBe` Right (JSONNum (-1234.0))
+    it "parses a decimal value" $ do
+      parse numJSON "" "89.123" `shouldBe` Right (JSONNum 89.123)
+    it "parses a number in scientific notation" $ do
+      parse numJSON "" "1.234e14" `shouldBe` Right (JSONNum 1.234e14)
+    it "parses a number in scientific notation with capital E" $ do
+      parse numJSON "" "1.23E4" `shouldBe` Right (JSONNum 1.23E4)
+    it "doesn't parse a non-number value" $ do
+      parse numJSON "" "true" `shouldSatisfy` isLeft
+
   describe "stringJSON" $ do
     it "parses a normal string" $ do
       parse stringJSON "" "\"string\"" `shouldBe` Right (JSONString "string")
@@ -47,6 +75,8 @@ spec = do
   describe "valueJSON" $ do
     it "parses a boolean value" $ do
       parse valueJSON "" "true" `shouldBe` Right (JSONBool True)
+    it "parses a number value" $ do
+      parse valueJSON "" "12345" `shouldBe` Right (JSONNum 12345)
     it "parses a string" $ do
       parse valueJSON "" "\"string\"" `shouldBe` Right (JSONString "string")
     it "parses a null value" $ do

@@ -9,13 +9,13 @@
 
 module Data.Parse.JSON where
 
-import Control.Applicative ((<$>), (<|>), (*>), (<*), many)
-import Text.ParserCombinators.Parsec (char, noneOf, parse, Parser, string)
+import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), many)
+import Text.ParserCombinators.Parsec (char, digit, noneOf, oneOf, parse, Parser, string)
 
 -- | Represents a JSON value.
 data JSONValue =
     JSONBool Bool                     -- ^ A boolean value
-  | JSONInt Int                       -- ^ A number
+  | JSONNum Float                     -- ^ A number
   | JSONString String                 -- ^ A string
   | JSONObject [(String, JSONValue)]  -- ^ A list of key value pairs
   | JSONArray [JSONValue]             -- ^ An array of JSON values
@@ -45,6 +45,28 @@ boolFalse = fmap (const False) $ string "false"
 boolJSON :: Parser JSONValue
 boolJSON = fmap (JSONBool) $ boolTrue <|> boolFalse
 
+-- | Parses a number into a String.
+--
+-- >>> parse numString "" "12345"
+-- Right "12345"
+--
+-- >>> parse numString "" "1.234e5"
+-- Right "1.234e5"
+numString :: Parser String
+numString = (++) <$> firstChar <*> (many (digit <|> oneOf "Ee."))
+  where firstChar    = charToString <$> (digit <|> oneOf "-")
+        charToString = \x -> [x]
+
+-- | Parses a JSON number value
+--
+-- >>> parse numJSON "" "12345"
+-- Right (JSONNum 12345.0)
+--
+-- >>> parse numJSON "" "1.234e5"
+-- Right (JSONNum 123400.0)
+numJSON :: Parser JSONValue
+numJSON = JSONNum <$> (read :: String -> Float) <$> numString
+
 -- | Parses a JSON string value.
 --
 -- >>> parse stringJSON "" "\"string\""
@@ -70,4 +92,4 @@ nullJSON = (const JSONNull) <$> string "null"
 -- >>> parse valueJSON "" "null"
 -- Right JSONNull
 valueJSON :: Parser JSONValue
-valueJSON = boolJSON <|> stringJSON <|> nullJSON
+valueJSON = boolJSON <|> numJSON <|> stringJSON <|> nullJSON

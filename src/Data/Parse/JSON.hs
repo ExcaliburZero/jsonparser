@@ -10,6 +10,7 @@
 module Data.Parse.JSON where
 
 import Control.Applicative ((<$>), (<|>), (<*>), (*>), (<*), empty, many)
+import Data.Char (toLower)
 import Text.ParserCombinators.Parsec.Token ()
 import Text.ParserCombinators.Parsec (char, digit, noneOf, oneOf, parse, Parser, spaces, string)
 
@@ -22,6 +23,30 @@ data JSONValue =
   | JSONArray [JSONValue]             -- ^ An array of JSON values
   | JSONObject [(String, JSONValue)]  -- ^ A list of key value pairs
   deriving (Eq, Show)
+
+-- | Converts a JSON value into a JSON String representation.
+--
+-- >>> showAsJSON (JSONBool True)
+-- "true"
+--
+-- >>> showAsJSON (JSONObject [("key", JSONNull)])
+-- "{\"key\": null}"
+showAsJSON :: JSONValue -> String
+showAsJSON value = case value of
+  JSONBool b   -> map toLower $ show b
+  JSONNum n    -> show n
+  JSONString s -> show s
+  JSONNull     -> "null"
+  JSONArray a  -> "[" ++ showJSONList a
+  JSONObject o -> "{" ++ showJSONObject o
+  where
+    showJSONList :: [JSONValue] -> String
+    showJSONList []     = "]"
+    showJSONList (x:xs) = showAsJSON x ++ (if null xs then "" else ", ") ++ showJSONList xs
+
+    showJSONObject :: [(String, JSONValue)] -> String
+    showJSONObject [] = "}"
+    showJSONObject ((key, v):xs) = show key ++ ": " ++ (showAsJSON v) ++ (if null xs then "" else ", ") ++ showJSONObject xs
 
 -- | Parses a "true" string into a True value.
 --

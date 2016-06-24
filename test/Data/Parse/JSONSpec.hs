@@ -23,26 +23,46 @@ spec = do
   describe "JSONBool" $ do
     it "can be converted itno a String" $ do
       show (JSONBool True) `shouldBe` "JSONBool True"
+    it "can be converted into a JSON representation" $ do
+      showAsJSON (JSONBool True) `shouldBe` "true"
 
   describe "JSONNum" $ do
     it "can be converted into a String" $ do
       show (JSONNum 1234.5) `shouldBe` "JSONNum 1234.5"
+    it "can be converted into a JSON representation" $ do
+      showAsJSON (JSONNum 1234.5) `shouldBe` "1234.5"
 
   describe "JSONString" $ do
     it "can be converted into a String" $ do
       show (JSONString "string") `shouldBe` "JSONString \"string\""
+    it "can be converted into a JSON representation" $ do
+      showAsJSON (JSONString "string") `shouldBe` "\"string\""
 
   describe "JSONNull" $ do
     it "can be converted into a String" $ do
       show JSONNull `shouldBe` "JSONNull"
+    it "can be converted into a JSON representation" $ do
+      showAsJSON (JSONNull) `shouldBe` "null"
 
   describe "JSONArray" $ do
     it "can be converted into a String" $ do
       show (JSONArray [JSONNull]) `shouldBe` "JSONArray [JSONNull]"
+    it "can be converted into a JSON representation w/single element" $ do
+      showAsJSON (JSONArray [JSONNull]) `shouldBe` "[null]"
+    it "can be converted into a JSON representation w/multiple elements" $ do
+      showAsJSON (JSONArray [JSONNull, JSONNull, JSONBool True]) `shouldBe` "[null, null, true]"
+    it "can be converted into a JSON representation w/no elements" $ do
+      showAsJSON (JSONArray []) `shouldBe` "[]"
 
   describe "JSONObject" $ do
     it "can be converted into a String" $ do
       show (JSONObject [("a", JSONBool True)]) `shouldBe` "JSONObject [(\"a\",JSONBool True)]"
+    it "can be converted into a JSON representation w/single field" $ do
+      showAsJSON (JSONObject [("a", JSONNull)]) `shouldBe` "{\"a\": null}"
+    it "can be converted into a JSON representation w/multiple fields" $ do
+      showAsJSON (JSONObject [("a", JSONNull), ("b", JSONNull)]) `shouldBe` "{\"a\": null, \"b\": null}"
+    it "can be converted into a JSON representation w/no fields" $ do
+      showAsJSON (JSONObject []) `shouldBe` "{}"
 
   describe "boolTrue" $ do
     it "parses a true value" $ do

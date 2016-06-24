@@ -98,6 +98,20 @@ spec = do
     it "doesn't parse a list with an empty first value" $ do
       parse arrayJSON "" "[,true]" `shouldSatisfy` isLeft
 
+  describe "objectJSON" $ do
+    it "parses a single field object" $ do
+      parse objectJSON "" "{\"a\":true}" `shouldBe` Right (JSONObject [("a", JSONBool True)])
+    it "parses a multi field object" $ do
+      parse objectJSON "" "{\"a\":true,\"b\":false}" `shouldBe` Right (JSONObject [("a", JSONBool True), ("b", JSONBool False)])
+    it "parses an object with no fields" $ do
+      parse objectJSON "" "{}" `shouldBe` Right (JSONObject [])
+    it "parses an object with separating spaces" $ do
+      parse objectJSON "" "{ \"a\" : true , \"b\" : 123 }" `shouldBe` Right (JSONObject [("a", JSONBool True), ("b", JSONNum 123.0)])
+    it "parses an object with newline sperated fields" $ do
+      parse objectJSON "" "{\n\"a\":true\n}" `shouldBe` Right (JSONObject [("a", JSONBool True)])
+    it "doesn't parse an invalid object" $ do
+      parse objectJSON "" "}\"s\":false{" `shouldSatisfy` isLeft
+
   describe "valueJSON" $ do
     it "parses a boolean value" $ do
       parse valueJSON "" "true" `shouldBe` Right (JSONBool True)
@@ -109,6 +123,8 @@ spec = do
       parse valueJSON "" "null" `shouldBe` Right JSONNull
     it "parses an array" $ do
       parse valueJSON "" "[1,2]" `shouldBe` Right (JSONArray [JSONNum 1.0, JSONNum 2.0])
+    it "parses an object" $ do
+      parse valueJSON "" "{\"a\":true}" `shouldBe` Right (JSONObject [("a", JSONBool True)])
     it "doesn't parse a non-JSON value" $ do
       parse valueJSON "" "{{]]f343}[[;" `shouldSatisfy` isLeft
 

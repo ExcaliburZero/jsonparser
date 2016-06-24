@@ -68,12 +68,19 @@ numString = (++) <$> firstChar <*> (many (digit <|> oneOf "Ee."))
 numJSON :: Parser JSONValue
 numJSON = JSONNum <$> (read :: String -> Float) <$> numString
 
+-- | Parses a JSON string value into a regular String.
+--
+-- >>> parse stringParser "" "\"string\""
+-- Right "string"
+stringParser :: Parser String
+stringParser = char '\"' *> (many $ noneOf "\"") <* char '\"'
+
 -- | Parses a JSON string value.
 --
 -- >>> parse stringJSON "" "\"string\""
 -- Right (JSONString "string")
 stringJSON :: Parser JSONValue
-stringJSON = JSONString <$> (char '\"' *> (many $ noneOf "\"") <* char '\"')
+stringJSON = JSONString <$> stringParser
 
 -- | Parses a JSON null value.
 --
@@ -99,6 +106,26 @@ arrayJSON = JSONArray <$> (char '[' *> spaces *> valuesAndEnding)
         withoutValues = (const []) <$> char ']'
         values = (:) <$> valueJSON <*> (many $ (char ',' *> spaces *> valueJSON))
 
+-- | Parses a JSON object.
+--
+-- >>> parse objectJSON "" "{\"a\":true}"
+-- Right (JSONObject [("a",JSONBool True)])
+objectJSON :: Parser JSONValue
+objectJSON = JSONObject <$> (start *> pairsAndEnding)
+  where start = char '{' <* spaces
+        pairsAndEnding = withPairs <|> withoutPairs
+        withoutPairs = (const []) <$> char '}'
+        withPairs = pairs <* char '}'
+        pairs = (:) <$> pair <*> (many $ (char ',' *> spaces *> pair))
+        pair = do
+          key <- stringParser
+          spaces
+          _ <- char ':'
+          spaces
+          value <- valueJSON
+          spaces
+          return (key, value)
+
 -- | Parses a JSON value.
 --
 -- >>> parse valueJSON "" "true"
@@ -110,4 +137,4 @@ arrayJSON = JSONArray <$> (char '[' *> spaces *> valuesAndEnding)
 -- >>> parse valueJSON "" "null"
 -- Right JSONNull
 valueJSON :: Parser JSONValue
-valueJSON = boolJSON <|> numJSON <|> stringJSON <|> nullJSON <|> arrayJSON
+valueJSON = boolJSON <|> numJSON <|> stringJSON <|> nullJSON <|> arrayJSON <|> objectJSON

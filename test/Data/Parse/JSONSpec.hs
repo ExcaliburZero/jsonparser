@@ -20,6 +20,30 @@ spec = do
     it "can find inequality between two different instances of the same constructor" $ do
       JSONBool True /= JSONBool False `shouldBe` True
 
+  describe "JSONBool" $ do
+    it "can be converted itno a String" $ do
+      show (JSONBool True) `shouldBe` "JSONBool True"
+
+  describe "JSONNum" $ do
+    it "can be converted into a String" $ do
+      show (JSONNum 1234.5) `shouldBe` "JSONNum 1234.5"
+
+  describe "JSONString" $ do
+    it "can be converted into a String" $ do
+      show (JSONString "string") `shouldBe` "JSONString \"string\""
+
+  describe "JSONNull" $ do
+    it "can be converted into a String" $ do
+      show JSONNull `shouldBe` "JSONNull"
+
+  describe "JSONArray" $ do
+    it "can be converted into a String" $ do
+      show (JSONArray [JSONNull]) `shouldBe` "JSONArray [JSONNull]"
+
+  describe "JSONObject" $ do
+    it "can be converted into a String" $ do
+      show (JSONObject [("a", JSONBool True)]) `shouldBe` "JSONObject [(\"a\",JSONBool True)]"
+
   describe "boolTrue" $ do
     it "parses a true value" $ do
       parse boolTrue "" "true" `shouldBe` Right True

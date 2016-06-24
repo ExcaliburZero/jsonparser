@@ -12,6 +12,14 @@ main = hspec spec
 
 spec :: Spec
 spec = do
+  describe "JSONValue" $ do
+    it "can compare for equality" $ do
+      JSONBool True == JSONBool True `shouldBe` True
+    it "can find inequality between different constructors" $ do
+      JSONBool True /= JSONString "string" `shouldBe` True
+    it "can find inequality between two different instances of the same constructor" $ do
+      JSONBool True /= JSONBool False `shouldBe` True
+
   describe "boolTrue" $ do
     it "parses a true value" $ do
       parse boolTrue "" "true" `shouldBe` Right True

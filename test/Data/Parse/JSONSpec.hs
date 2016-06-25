@@ -3,6 +3,7 @@ module Data.Parse.JSONSpec (main, spec) where
 import Test.Hspec
 
 import Data.Parse.JSON
+import System.IO.Unsafe (unsafePerformIO)
 import Text.ParserCombinators.Parsec
 
 -- `main` is here so that this module can be run from GHCi on its own.  It is
@@ -12,6 +13,8 @@ main = hspec spec
 
 spec :: Spec
 spec = do
+  let testJSONFile = unsafePerformIO (readFile "test/sample.json")
+
   describe "JSONValue" $ do
     it "can compare for equality" $ do
       JSONBool True == JSONBool True `shouldBe` True
@@ -19,6 +22,12 @@ spec = do
       JSONBool True /= JSONString "string" `shouldBe` True
     it "can find inequality between two different instances of the same constructor" $ do
       JSONBool True /= JSONBool False `shouldBe` True
+    it "can parse a JSON file and convert it back into a JSON String, then reparse that String" $ do
+      let jsonParse  = parse valueJSON "" testJSONFile
+      let jsonString = (showAsJSON . escapeRight) jsonParse
+      let reparse    = parse valueJSON "" jsonString
+      reparse `shouldSatisfy` not . isLeft
+      reparse `shouldBe` jsonParse
 
   describe "JSONBool" $ do
     it "can be converted itno a String" $ do
@@ -177,6 +186,8 @@ spec = do
       parse valueJSON "" "[1,2]" `shouldBe` Right (JSONArray [JSONNum 1.0, JSONNum 2.0])
     it "parses an object" $ do
       parse valueJSON "" "{\"a\":true}" `shouldBe` Right (JSONObject [("a", JSONBool True)])
+    it "parses a JSON file" $ do
+      parse valueJSON "" testJSONFile `shouldSatisfy` not . isLeft
     it "doesn't parse a non-JSON value" $ do
       parse valueJSON "" "{{]]f343}[[;" `shouldSatisfy` isLeft
 
@@ -185,3 +196,9 @@ isLeft :: Either a b -> Bool
 isLeft e = case e of
   Left _  -> True
   Right _ -> False
+
+-- | Pulls a Right value out of an Either.
+escapeRight :: Either a b -> b
+escapeRight value = case value of
+  Right b -> b
+  Left _  -> error "unexpected Left"
